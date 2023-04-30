@@ -13,6 +13,7 @@ const refs = {
 
 const lightbox = new SimpleLightbox('.photo-card a', 250);
 let page = 1;
+
 const perPage = 40;
 let searchInputValue = "";
 refs.searchForm.addEventListener("submit", onSubmit)
@@ -23,7 +24,7 @@ refs.searchForm.addEventListener("submit", onSubmit)
 function onSubmit(e){
     e.preventDefault()
     page = 1
-    searchInputValue =  e.target.searchQuery.value;
+    searchInputValue =  e.target.searchQuery.value.trim();
     if (!searchInputValue) {
         clearImagesListHtml();
         Notify.info('Write your search query');
@@ -35,38 +36,32 @@ function onSubmit(e){
 async function doSearch() {
     try {
     //   loadMoreButton.classList.add('is-hidden');
-      const resultFromQuery = await imgApi(searchInputValue, perPage, page);
-
-      if (resultFromQuery.hits.length === 0) {
+      const {data} = await imgApi(searchInputValue, perPage, page);
+      console.log(data)
+      if (data.hits.length === 0 ) {
+        window.removeEventListener("scroll", handleScroll)
         clearImagesListHtml();
         Notify.info(
           'Sorry, there are no images matching your search query. Please try again.'
         );
       }
      else if(searchInputValue){
-      createMarkup(resultFromQuery)
-      
+      createMarkup(data)
+      Notify.info(
+        `We found ${data.total} images!`
+      );
       } 
-       if( resultFromQuery.hits.length > 0 &&
-        resultFromQuery.totalHits <= perPage){
-          Notify.info(
-            'Sorry, there are no images matching your search query. Please try again.'
-          );
-        }
+      // else if(data.hits.length > 0 &&
+      //   data.totalHits > perPage){
+      //     window.removeEventListener("scroll", handleScroll)
+      //     return;
+      //   }
   
     } catch (error) {
-      if (resultFromQuery.hits.length === 0) {
-        onError(error)}
-      if (error.message === '404') {
-        clearImagesListHtml();
-        Notify.failure(
-          'Oops, there are no images matching your search query. Please try again.'
-        );
-      }
-      console.log(error);
-    }
+        onError(error)
+    
   }
-
+}
 
 function createMarkup({hits}){
     const result = hits.map(({ 
@@ -108,18 +103,29 @@ function clearImagesListHtml() {
   }
 async function fetchArticles(){
   try {
-     page += 1
-      const resultFromQuery = await imgApi(searchInputValue, perPage, page);
-      renderList(resultFromQuery.hits);
-
+    const {data} = await imgApi(searchInputValue, perPage, page);
+   
+      if(data.hits.length > 0 &&
+        data.totalHits >= perPage){
+          lightbox.refresh();
+          page += 1
+          renderList(data);
+       
+      } else{
+        window.removeEventListener("scroll", handleScroll)
+        Notify.info(
+          `You saw all Images`
+        );
+    }
+      
       }
    catch (error) {
     
 
   }
 }
-function renderList(markup){
-  const result = markup.map(({ 
+function renderList({hits}){
+  const result = hits.map(({ 
     webformatURL,
     largeImageURL,
     tags,
@@ -146,6 +152,7 @@ function renderList(markup){
   </div>
 </div>`
 }).join("");
+
 handleScroll()
 refs.galery.insertAdjacentHTML("beforeend", result);
 

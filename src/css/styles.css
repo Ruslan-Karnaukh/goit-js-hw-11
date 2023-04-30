@@ -19,10 +19,11 @@ body{
     display: flex;
     justify-content: center;
     align-items: center;
+    margin-bottom: 20px;
 }
 img{
     width: 100%;
-    height: 50%;
+    height: 80%;
 }
 input{
     width: 220px;
@@ -62,11 +63,13 @@ button:hover{
     flex-wrap: wrap;
     gap: 15px;
     margin: 20px ;
+    margin-bottom: 40px;
     background-color: #bdbcbc2e;
     
 }
 .photo-card{
     width: calc(100% / 4 - 15px);
+    
     box-shadow: 5px 5px 5px #4a44444b, 10px 10px 10px #4a44444b;
     
 }
